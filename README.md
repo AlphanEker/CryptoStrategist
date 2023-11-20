@@ -9,7 +9,14 @@ CryptoStrategist is an innovative cryptocurrency trading bot developed using Dee
 - **Risk Manager Agent**: Evaluates and manages risks associated with trading decisions.
 
 ## Installation
-Provide instructions on how to install and set up the bot.
+### Server Setup
+```
+cd ./server
+npm install
+cd ..
+```
+
+### Bot Setup
 
 ## Usage
 Explain how to use the bot, including any command line arguments or configuration settings.
