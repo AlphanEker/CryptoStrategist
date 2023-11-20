@@ -14,7 +14,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
  * @swagger
  * /:
  *   get:
- *     description: Get a list of examples
+ *     description: Main screen, this is for test purposes only.
  *     responses:
  *       200:
  *         description: Successful response
@@ -27,7 +27,7 @@ app.get('/', (req: Request, res: Response) => {
  * @swagger
  * /GetRate:
  *   get:
- *     description: Get a list of examples
+ *     description: Get Current Exchange Rate of the coin
  *     responses:
  *       200:
  *         description: Successful response
@@ -41,7 +41,7 @@ app.get('/GetRate', (req: Request, res: Response) => {
  * @swagger
  * /UpdateRate:
  *   put:
- *     description: Get a list of examples
+ *     description: Update Exchange Rate of the coin
  *     responses:
  *       200:
  *         description: Successful response
@@ -55,7 +55,7 @@ app.get('/UpdateRate', (req: Request, res: Response) => {
  * @swagger
  * /UpdateBalance:
  *   put:
- *     description: Get a list of examples
+ *     description: Update the balance of Agents
  *     responses:
  *       200:
  *         description: Successful response
@@ -73,8 +73,8 @@ app.post('/UpdateBalance', (req: Request, res: Response) => {
 /**
  * @swagger
  * /Buy:
- *   get:
- *     description: Get a list of examples
+ *   put:
+ *     description: Buy the coin for given amount and update the coin balance
  *     responses:
  *       200:
  *         description: Successful response
@@ -94,7 +94,7 @@ app.post('/Buy', (req: Request, res: Response) => {
  * @swagger
  * /Sell:
  *   get:
- *     description: Get a list of examples
+ *     description: Buy the coin for given amount and update the coin balance
  *     responses:
  *       200:
  *         description: Successful response
@@ -114,7 +114,7 @@ app.post('/Sell', (req: Request, res: Response) => {
  * @swagger
  * /UpdateCoinBalance:
  *   get:
- *     description: Get a list of examples
+ *     description: Update The coin balance, this can be removed
  *     responses:
  *       200:
  *         description: Successful response
