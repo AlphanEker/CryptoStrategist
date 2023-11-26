@@ -8,27 +8,27 @@ from keras.models import load_model, clone_model
 from keras.layers import Dense
 from keras.optimizers import Adam
 
-def huber_loss(y_true, y_pred, clip_delta=1.0):
-    """Huber loss - Custom Loss Function for Q Learning
-
-    Links: 	https://en.wikipedia.org/wiki/Huber_loss
-            https://jaromiru.com/2017/05/27/on-using-huber-loss-in-deep-q-learning/
+def huber_loss(actual, predicted, delta=1.0):
     """
-    error = y_true - y_pred
-    cond = K.abs(error) <= clip_delta
+    error^2/2, if |error| <= delta (ie, if it is a small error); delta * ( |error| - delta/2), otherwise
+    """
+    error = actual - predicted
+    cond = K.abs(error) <= delta
     squared_loss = 0.5 * K.square(error)
-    quadratic_loss = 0.5 * K.square(clip_delta) + clip_delta * (K.abs(error) - clip_delta)
+    quadratic_loss = delta * (K.abs(error) - (delta/2))
+
+    # Return the result as a tensor
     return K.mean(tf.where(cond, squared_loss, quadratic_loss))
 
 class Agent:
-    def __init__(self, state_size, model_name):
+    def __init__(self, state_size, model_name, pretrained):
 
         # agent config
-        self.state_size = state_size
-        self.action_size = 3  # [hold, buy, sell]
+        self.state_size = state_size    # number of days scaled
+        self.action_size = 3            # [hold, buy, sell]
         self.model_name = model_name
         self.inventory = []
-        self.memory = deque(maxlen=10000)
+        self.memory = deque(maxlen=10000) # replay buffer
         self.first_iter = True
 
         # model config
@@ -41,8 +41,19 @@ class Agent:
         self.custom_objects = {"huber_loss": huber_loss}  # important for loading the model from memory
         self.optimizer = Adam(lr=self.learning_rate)
 
+        if pretrained:
+            try:
+                self.model = self.load()
+            except error:
+                print("### Error during model load:", error)
+
     def _model(self):
-        """Creates the model
+
+        """
+        A Sequential model used as a base model.
+        5 dense layers with relu activation function are added to the sequential model.
+        Input layer accepts state_size dimensioned inputs.
+        Output layer outputs an action.
         """
         model = Sequential()
         model.add(Dense(units=128, activation="relu", input_dim=self.state_size))
@@ -55,12 +66,14 @@ class Agent:
         return model
 
     def remember(self, state, action, reward, next_state, done):
-        """Adds relevant data to memory
+        """
+        Saves the current sample into replay buffer.
         """
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state, is_eval=False):
-        """Take action from given possible set of actions
+        """
+        Take action from given possible set of actions
         """
         # take random action in order to diversify experience at the beginning
         if not is_eval and random.random() <= self.epsilon:
@@ -70,31 +83,19 @@ class Agent:
             self.first_iter = False
             return 1 # make a definite buy on the first iter
 
+        # Take the maximum probability action given state
         action_probs = self.model.predict(state)
         return np.argmax(action_probs[0])
 
     def train_experience_replay(self, batch_size):
-        """Train on previous experiences in memory
         """
+        Train on previous experiences in memory
+        """
+
+        # Get a random batch from the memory
         mini_batch = random.sample(self.memory, batch_size)
         X_train, y_train = [], []
 
-        dqn(mini_batch)
-
-        # update q-function parameters based on huber loss gradient
-        loss = self.model.fit(
-            np.array(X_train), np.array(y_train),
-            epochs=1, verbose=0
-        ).history["loss"][0]
-
-        # as the training goes on we want the agent to
-        # make less random and more optimal decisions
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
-
-        return loss
-
-    def dqn(self, mini_batch):
         # Deep Q-Learning
         for state, action, reward, next_state, done in mini_batch:
             if done:
@@ -110,6 +111,19 @@ class Agent:
 
                 X_train.append(state[0])
                 y_train.append(q_values[0])
+
+        # update q-function parameters based on huber loss gradient
+        loss = self.model.fit(
+            np.array(X_train), np.array(y_train),
+            epochs=1, verbose=0
+        ).history["loss"][0]
+
+        # as the training goes on we want the agent to
+        # make less random and more optimal decisions
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+
+        return loss
 
     def save(self, episode):
         self.model.save("models/{}_{}".format(self.model_name, episode))
