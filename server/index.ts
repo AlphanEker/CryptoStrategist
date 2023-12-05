@@ -100,32 +100,30 @@ app.get('/GetCurrencyBalance', (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /Buy:
- *   put:
- *     parameters:
- *       - name: buyAmount
- *         in: body
- *         description: The amount to buy (integer).
- *         required: true
- *         schema:
- *           type: integer
- *           format: int32
- *     description: Buy the coin for given amount and update the coin balance
+ * /buy:
+ *   post:
+ *     requestBody:
+ *       description: The amount to buy (number).
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               buyAmount:
+ *                 type: number
+ *                 format: number
+ *     description: Buy the coin for the given amount and update the coin balance.
  *     responses:
  *       200:
  *         description: Successful response
  */
+
 // Buy
-app.put('/Buy', (req: Request, res: Response) => {
+app.post('/Buy', (req: Request, res: Response) => {
   // Assuming you send JSON with { "buyAmount": buyAmount, "price": buyPrice } in the request body
   const buyAmount: number = req.body.buyAmount;
   const price: number = getCurrentRate();
-
-  // Check if currencyBalance and balance are initialized
-  if (currencyBalance === undefined || balance === undefined) {
-    res.status(500).json({ error: 'Server error: Currency balance or total balance not initialized' });
-    return;
-  }
 
   if (balance < buyAmount * price) {
     res.status(400).json({ error: 'Not enough balance' });
@@ -133,15 +131,12 @@ app.put('/Buy', (req: Request, res: Response) => {
     //
     currencyBalance = currencyBalance + buyAmount;
     balance = balance - (buyAmount * price);
-    res.json(req.body)
-    /*
     res.json({
       'Bought Amount': buyAmount,
-      'Bought Exchange Rate': price,
+      'Price': price,
       'Total Currency Balance': currencyBalance,
       'Total Balance': balance,
     });
-    */
   }
 });
 
@@ -149,6 +144,7 @@ app.put('/Buy', (req: Request, res: Response) => {
  * @swagger
  * /Sell:
  *   post:
+<<<<<<< HEAD
  *     parameters:
  *       - name: buyAmount
  *         in: body
@@ -158,6 +154,20 @@ app.put('/Buy', (req: Request, res: Response) => {
  *           type: integer
  *           format: int32
  *     description: Buy the coin for given amount and update the coin balance
+=======
+ *     requestBody:
+ *       description: The amount to buy (number).
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 format: number
+ *     description: Buy the coin for the given amount and update the coin balance.
+>>>>>>> aa3039df73decff0b7d1244048286c31559556d6
  *     responses:
  *       200:
  *         description: Successful response
