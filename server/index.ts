@@ -148,7 +148,15 @@ app.put('/Buy', (req: Request, res: Response) => {
 /**
  * @swagger
  * /Sell:
- *   get:
+ *   post:
+ *     parameters:
+ *       - name: buyAmount
+ *         in: body
+ *         description: The amount to buy (integer).
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           format: int32
  *     description: Buy the coin for given amount and update the coin balance
  *     responses:
  *       200:
