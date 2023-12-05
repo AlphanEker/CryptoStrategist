@@ -5,11 +5,11 @@ import numpy as np
 
 from tqdm import tqdm
 
-from .utils import (
+from short_term.utils import (
     format_currency,
     format_position
 )
-from .ops import (
+from short_term.ops import (
     get_state
 )
 
@@ -22,7 +22,7 @@ def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=1
 
     state = get_state(data, 0, window_size + 1)
 
-    for t in tqdm(range(data_length), total=data_length, leave=True, desc='Episode {}/{}'.format(episode, ep_count)):
+    for t in range(data_length): # tqdm(range(data_length), total=data_length, leave=True, desc='Episode {}/{}'.format(episode, ep_count))
         reward = 0
         next_state = get_state(data, t + 1, window_size + 1)
 
@@ -49,17 +49,19 @@ def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=1
 
         if len(agent.memory) > batch_size:
             loss = agent.train_experience_replay(batch_size)
+            print(f"### Loss at episode = {episode}, t = {t}:", loss)
             avg_loss.append(loss)
 
         state = next_state
 
     if episode % 10 == 0:
-        agent.save(episode)
+        agent.save(episode, window_size, batch_size)
 
     return (episode, ep_count, total_profit, np.mean(np.array(avg_loss)))
 
 
-def evaluate_model(agent, data, window_size, debug):
+def evaluate_model(agent, data, window_size, debug=True):
+    debug=True
     total_profit = 0
     data_length = len(data) - 1
 

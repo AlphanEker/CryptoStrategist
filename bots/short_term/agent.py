@@ -8,6 +8,8 @@ from keras.models import load_model, clone_model
 from keras.layers import Dense
 from keras.optimizers import Adam
 
+import logging
+
 def huber_loss(actual, predicted, delta=1.0):
     """
     error^2/2, if |error| <= delta (ie, if it is a small error); delta * ( |error| - delta/2), otherwise
@@ -23,6 +25,8 @@ def huber_loss(actual, predicted, delta=1.0):
 class Agent:
     def __init__(self, state_size, model_name, pretrained):
 
+        tf.get_logger().setLevel(tf.compat.v1.logging.ERROR)
+
         # agent config
         self.state_size = state_size    # number of days scaled
         self.action_size = 3            # [hold, buy, sell]
@@ -31,24 +35,22 @@ class Agent:
         self.memory = deque(maxlen=10000) # replay buffer
         self.first_iter = True
 
-        # model config
-        self.gamma = 0.95  # discount for long term reward
+        # model configuration
+        self.gamma = 0.95
         self.epsilon = 1.0
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.loss = huber_loss
-        self.custom_objects = {"huber_loss": huber_loss}  # important for loading the model from memory
+        self.custom_objects = {"huber_loss": huber_loss}
         self.optimizer = Adam(lr=self.learning_rate)
 
-        if pretrained:
-            try:
-                self.model = self.load()
-            except error:
-                print("### Error during model load:", error)
+        if pretrained and self.model_name is not None:
+            self.model = self.load()
+        else:
+            self.model = self._model()
 
     def _model(self):
-
         """
         A Sequential model used as a base model.
         5 dense layers with relu activation function are added to the sequential model.
@@ -91,7 +93,6 @@ class Agent:
         """
         Train on previous experiences in memory
         """
-
         # Get a random batch from the memory
         mini_batch = random.sample(self.memory, batch_size)
         X_train, y_train = [], []
@@ -125,8 +126,8 @@ class Agent:
 
         return loss
 
-    def save(self, episode):
-        self.model.save("models/{}_{}".format(self.model_name, episode))
+    def save(self, episode, window_size, batch_size):
+        self.model.save("models/{}_ep{}_wd{}_bs{}".format(self.model_name, episode, window_size, batch_size))
 
     def load(self):
         return load_model("models/" + self.model_name, custom_objects=self.custom_objects)

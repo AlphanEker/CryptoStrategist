@@ -11,7 +11,6 @@ import keras.backend as K
 # Formats Position
 format_position = lambda price: ('-$' if price < 0 else '+$') + '{0:.2f}'.format(abs(price))
 
-
 # Formats Currency
 format_currency = lambda price: '${0:.2f}'.format(abs(price))
 
