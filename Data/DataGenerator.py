@@ -43,21 +43,6 @@ try:
 except TypeError as e:
     print("Error initializing IchimokuIndicator:", e)
 
-# Dynamic Fibonacci Retracement Levels
-window_size = 60  # Define your window size for high and low (120 default, I reduced it to 60 in order to catch smaller trends)
-
-def find_fibonacci_levels(data):
-    highs = data['high'].rolling(window=window_size).max()
-    lows = data['low'].rolling(window=window_size).min()
-    diff = highs - lows
-    data['Fib_23.6'] = highs - diff * 0.236
-    data['Fib_38.2'] = highs - diff * 0.382
-    data['Fib_61.8'] = highs - diff * 0.618
-    data['Fib_78.6'] = highs - diff * 0.786
-    return data
-
-data = find_fibonacci_levels(data)
-
 # Write the data with RSI to a new CSV file
 data.to_csv(output_file_path, index=False)
 
