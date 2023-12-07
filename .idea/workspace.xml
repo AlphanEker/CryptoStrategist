@@ -5,12 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f0a6cc7e-333a-4d58-802e-5a5eb9d5039a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/server/index.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/rates.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/swaggerConfig.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/tsconfig.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,7 +67,7 @@
       <updated>1700785687227</updated>
       <workItem from="1700785688769" duration="17000" />
       <workItem from="1701793150441" duration="3373000" />
-      <workItem from="1701963360133" duration="2987000" />
+      <workItem from="1701963360133" duration="3606000" />
     </task>
     <servers />
   </component>
