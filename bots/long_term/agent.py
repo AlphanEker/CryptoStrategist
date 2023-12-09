@@ -8,6 +8,8 @@ from keras.models import load_model, clone_model
 from keras.layers import Dense
 from keras.optimizers import Adam
 
+from tensorflow.compat.v1.losses import sparse_softmax_cross_entropy
+
 import logging
 
 def huber_loss(actual, predicted, delta=1.0):
@@ -22,12 +24,11 @@ def huber_loss(actual, predicted, delta=1.0):
     # Return the result as a tensor
     return K.mean(tf.where(cond, squared_loss, quadratic_loss))
 
-class ShortTermAgent:
+class LongTermAgent:
     def __init__(self, model_name, pretrained):
 
-
         # agent config
-        self.state_size = 3             # CONSTANT FOR SHORT TERM
+        self.state_size = 10             # CONSTANT FOR SHORT TERM
         self.action_size = 3            # [hold, buy, sell]
         self.model_name = model_name
         self.inventory = []
@@ -42,7 +43,7 @@ class ShortTermAgent:
         self.learning_rate = 0.001
         self.loss = huber_loss
         self.custom_objects = {"huber_loss": huber_loss}
-        self.optimizer = Adam(lr=self.learning_rate)
+        self.optimizer = Adam(learning_rate=self.learning_rate)
 
         if pretrained and self.model_name is not None:
             self.model = self.load()
@@ -126,7 +127,6 @@ class ShortTermAgent:
         return loss
 
     def save(self, episode, window_size, batch_size):
-        self.model.save("models/short_term_{}_ep{}_wd{}_bs{}".format(self.model_name, episode, window_size, batch_size))
-
+        self.model.save("models/long_term_{}_ep{}_wd{}_bs{}".format(self.model_name, episode, window_size, batch_size))
     def load(self):
         return load_model("models/" + self.model_name, custom_objects=self.custom_objects)

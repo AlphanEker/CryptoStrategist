@@ -2,9 +2,10 @@
 Script for evaluating Stock Trading Bot.
 
 Usage:
-  eval.py <eval-stock> [--window-size=<window-size>] [--model-name=<model-name>] [--debug]
+  eval.py [--agent-type=<agent_type>] [--window-size=<window-size>] [--model-name=<model-name>] [--debug]
 
 Options:
+  --agent-type=<agent_type>     Specify the type of agent (e.g., short-term).
   --window-size=<window-size>   Size of the n-day window stock data representation used as the feature vector. [default: 10]
   --model-name=<model-name>     Name of the pretrained model to use (will eval all models in `models/` if unspecified).
   --debug                       Specifies whether to use verbose logs during eval operation.
@@ -15,7 +16,9 @@ import coloredlogs
 
 from docopt import docopt
 
-from short_term.agent import Agent
+from short_term.agent import ShortTermAgent
+from long_term.agent import LongTermAgent
+
 from short_term.methods import evaluate_model
 from short_term.utils import (
     get_stock_data,
@@ -26,36 +29,34 @@ from short_term.utils import (
 )
 
 
-def main(eval_stock, window_size, model_name, debug):
-    """ Evaluates the stock trading bot.
-    Please see https://arxiv.org/abs/1312.5602 for more details.
+def main(_agent_type, model_name, debug):
 
-    Args: [python eval.py --help]
-    """
-    data = get_stock_data(eval_stock)
+    #TODO: DELETE AFTER GETTING DATA
+    data = get_stock_data('./data/GOOG_2019.csv')
     initial_offset = data[1] - data[0]
 
     # Single Model Evaluation
     if model_name is not None:
-        agent = Agent(window_size, pretrained=True, model_name=model_name)
-        profit, _ = evaluate_model(agent, data, window_size, debug)
+        agent = None
+        if _agent_type == "short_term":
+            #TODO: GET HIGH FREQUENCY DATA HERE!
+            agent = ShortTermAgent(model_name=model_name, pretrained=True)
+            print(f"### Short Term agent initialized for evaluation with state size = {agent.state_size}.")
+        elif _agent_type == "long_term":
+            #TODO: GET LOW FREQUENCY DATA HERE!
+            agent = LongTermAgent(model_name=model_name, pretrained=True)
+            print(f"### Long Term agent initialized for evaluation with state size = {agent.state_size}.")
+        else:
+            print("### Invalid agent type! Exiting...")
+            sys.exit()
+        profit, _ = evaluate_model(agent, data, agent.state_size, debug)
         show_eval_result(model_name, profit, initial_offset)
-
-    # Multiple Model Evaluation
-    else:
-        for model in os.listdir("models"):
-            if os.path.isfile(os.path.join("models", model)):
-                agent = Agent(window_size, pretrained=True, model_name=model)
-                profit = evaluate_model(agent, data, window_size, debug)
-                show_eval_result(model, profit, initial_offset)
-                del agent
 
 
 if __name__ == "__main__":
     args = docopt(__doc__)
 
-    eval_stock = args["<eval-stock>"]
-    window_size = int(args["--window-size"])
+    agent_type = args["--agent-type"]
     model_name = args["--model-name"]
     debug = True
 
@@ -63,6 +64,6 @@ if __name__ == "__main__":
     switch_k_backend_device()
 
     try:
-        main(eval_stock, window_size, model_name, debug)
+        main(agent_type, model_name, debug)
     except KeyboardInterrupt:
         print("Aborted")
