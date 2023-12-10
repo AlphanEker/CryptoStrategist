@@ -3,7 +3,7 @@ import ta
 import numpy as np
 
 # File paths
-input_file_path = 'DOGEUSDT-1m-2021-08.csv'  # Replace with your input file path
+input_file_path = 'DOGEUSDT-1m-2021-09.csv'  # Replace with your input file path
 output_file_path = 'HFTData.csv'  # Replace with your desired output file path
 
 # Define the headers
