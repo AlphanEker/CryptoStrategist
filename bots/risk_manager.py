@@ -10,6 +10,7 @@ Options:
 from docopt import docopt
 import coloredlogs
 import logging
+import requests
 import subprocess
 import sys
 from short_term.agent import ShortTermAgent
@@ -37,6 +38,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
     state1 = get_state(data, 0, agent1.state_size + 1)
     state2 = get_state(data, 0, agent2.state_size + 1)
 
+    url = "http://localhost:8111/log_action"
     for t in range(data_length):
         reward = 0
         next_state1 = get_state(data, t + 1, agent1.state_size + 1)
@@ -88,7 +90,21 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
         if action == 1:
             inventory.append(data[t])
             history.append((data[t], "BUY"))
-            logging.debug("RISK MANAGER BUT AT: {}".format(format_currency(data[t])))
+            logging.debug("RISK MANAGER BUY AT: {}".format(format_currency(data[t])))
+            data = {
+                'time': t,
+                'rm_request': 'buy',
+                'lft_agent_request': action2,
+                'hft_agent_request': action1,
+                'amount': 100,  # Buraya data gelcek
+                'total_balance': 0,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': 0  # hft gibi
+            }
+            response = requests.post(url, json=data)
+            print(response.text)  # Hata gelirse gorelim diye
+
 
         # SELL
         elif action == 2 and len(inventory) > 0:
@@ -99,9 +115,36 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
             history.append((data[t], "SELL"))
             logging.debug("RISK MANAGER SELL AT: {} | Position: {}".format(
                     format_currency(data[t]), format_position(data[t] - bought_price)))
+            data = {
+                'time': t,
+                'rm_request': 'sell',
+                'lft_agent_request': action2,
+                'hft_agent_request': action1,
+                'amount': 100,  # Buraya data gelcek
+                'total_balance': 0,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': 0  # hft gibi
+            }
+            response = requests.post(url, json=data)
+            print(response.text)  # Hata gelirse gorelim diye
         # HOLD
         else:
             history.append((data[t], "HOLD"))
+
+            data = {
+                'time': t,
+                'rm_request': 'hold',
+                'lft_agent_request': action2,
+                'hft_agent_request': action1,
+                'amount': 0,
+                'total_balance': 0,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': 0  # hft gibi
+            }
+            response = requests.post(url, json=data)
+            print(response.text)  # Hata gelirse gorelim diye
 
         done = (t == data_length - 1)
         agent1.memory.append((state1, action1, reward, next_state1, done))
@@ -116,6 +159,9 @@ def main():
     args = docopt(__doc__)
     investment = int(args["--investment"])
     risk_factor = int(args["--risk-factor"])
+    url = "http://localhost:8111/set_initial_balance"
+    data = {'initial_balance': investment}  # Burasi csv file profit hesaplama icin gonderiliyor
+    response = requests.post(url, json=data)
     if risk_factor < 1 or risk_factor > 10:
         print("### Invalid risk factor, risk factor should be an int between 1 and 10!")
         sys.exit()
