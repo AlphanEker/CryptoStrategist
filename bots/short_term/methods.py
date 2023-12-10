@@ -164,4 +164,19 @@ def evaluate_model(agent, data, window_size, debug=True):
 
         state = next_state
         if done:
+            balance = balance + (data[data_length - 1] * hft_inventory)
+            data2 = {
+                'time': data_length - 1,
+                'normalized_max': 0,
+                'rm_request': 'hold',
+                'lft_agent_request': "hold",
+                'hft_agent_request': "hold",
+                'amount': hft_inventory,  # Buraya data gelcek
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': 0  # hft gibi
+            }
+            hft_inventory = 0
+            response = requests.post(url, json=data2)
             return total_profit, history

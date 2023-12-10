@@ -31,7 +31,7 @@ from short_term.utils import (
 def main(_agent_type, model_name, debug):
 
     #TODO: DELETE AFTER GETTING DATA
-    data = get_stock_data('./data/GOOG_2019.csv')
+    data = get_stock_data('./data/GOOG_2018.csv')
     initial_offset = data[1] - data[0]
 
     # Single Model Evaluation

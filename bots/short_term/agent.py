@@ -117,6 +117,7 @@ class ShortTermAgent:
             if done:
                 target = reward
             else:
+                print('Reward: ',reward)
                 # approximate deep q-learning equation
                 target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
 
