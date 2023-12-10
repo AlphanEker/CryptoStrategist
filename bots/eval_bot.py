@@ -2,11 +2,10 @@
 Script for evaluating Stock Trading Bot.
 
 Usage:
-  eval.py [--agent-type=<agent_type>] [--window-size=<window-size>] [--model-name=<model-name>] [--debug]
+  eval_bot.py [--agent-type=<agent_type>] [--model-name=<model-name>] [--debug]
 
 Options:
   --agent-type=<agent_type>     Specify the type of agent (e.g., short-term).
-  --window-size=<window-size>   Size of the n-day window stock data representation used as the feature vector. [default: 10]
   --model-name=<model-name>     Name of the pretrained model to use (will eval all models in `models/` if unspecified).
   --debug                       Specifies whether to use verbose logs during eval operation.
 """
