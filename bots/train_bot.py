@@ -40,8 +40,8 @@ def main(_agent_type, _batch_size, _episode_count, _pretrained=False):
         sys.exit()
 
     #TODO: DELETE BELOW AFTER GETTING DATA ABOVE!
-    train_data = get_stock_data('./data/GOOG_2019.csv')
-    val_data = get_stock_data('./data/GOOG_2019.csv')
+    train_data = get_stock_data('./data/HFTData.csv')
+    val_data = get_stock_data('./data/HFTDataoffset.csv')
 
     initial_offset = val_data[1] - val_data[0]
 

@@ -5,15 +5,15 @@ import numpy as np
 
 from tqdm import tqdm
 
-from short_term.utils import (
+from bots.short_term.utils import (
     format_currency,
     format_position
 )
-from short_term.ops import (
+from bots.short_term.ops import (
     get_state
 )
 
-def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=10):
+def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=1):
     total_profit = 0
     data_length = len(data) - 1
 
@@ -31,12 +31,12 @@ def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=1
 
         # BUY
         if action == 1:
-            agent.inventory.append(data[t])
+            agent.inventory.append(data[t][0])
 
         # SELL
         elif action == 2 and len(agent.inventory) > 0:
             bought_price = agent.inventory.pop(0)
-            delta = data[t] - bought_price
+            delta = data[t][0] - bought_price
             reward = delta  # max(delta, 0)
             total_profit += delta
 

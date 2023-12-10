@@ -27,7 +27,7 @@ class ShortTermAgent:
 
 
         # agent config
-        self.state_size = 3             # CONSTANT FOR SHORT TERM
+        self.state_size = 27             # CONSTANT FOR SHORT TERM
         self.action_size = 3            # [hold, buy, sell]
         self.model_name = model_name
         self.inventory = []
@@ -101,9 +101,9 @@ class ShortTermAgent:
             if done:
                 target = reward
             else:
+                print("reward : ", reward)
                 # approximate deep q-learning equation
                 target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
-
                 # estimate q-values based on current state
                 q_values = self.model.predict(state)
                 # update the target for current action based on discounted reward
