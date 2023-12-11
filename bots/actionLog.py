@@ -1,8 +1,8 @@
-from flask import Flask, request
+import flask
 import csv
 import os
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
 
 # Global variable to store the initial balance
 initial_balance = None
@@ -21,7 +21,7 @@ Json body:
 @app.route('/set_initial_balance', methods=['POST'])
 def set_initial_balance():
     global initial_balance
-    initial_balance = request.json.get('initial_balance', 0)
+    initial_balance = flask.request.json.get('initial_balance', 0)
     return f"Initial balance set to {initial_balance}"
 
 '''
@@ -40,7 +40,7 @@ Json Body:
 @app.route('/log_action', methods=['POST'])
 def log_action():
     global initial_balance
-    data = request.json
+    data = flask.request.json
 
     # Calculate the balance difference
     if initial_balance is not None:

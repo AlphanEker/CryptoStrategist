@@ -68,7 +68,6 @@ def evaluate_model(agent, data, window_size, debug=True):
     data_length = len(data) - 1
     #burasi silinecek
     balance = 10000
-    confidence = 0.5
     hft_inventory = 0
     #########
     history = []
@@ -96,7 +95,7 @@ def evaluate_model(agent, data, window_size, debug=True):
         if action == 1:
             agent.inventory.append(data[t])
             history.append((data[t], "BUY"))
-            amount = balance * normalizedMax * confidence / data[t]
+            amount = balance * normalizedMax / data[t]
             balance = balance - (amount * data[t])
             hft_inventory = hft_inventory + amount
             data2 = {

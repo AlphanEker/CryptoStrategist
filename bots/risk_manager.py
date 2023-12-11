@@ -52,7 +52,20 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
         action2 = agent2.act(state2, is_eval=True) # Long term agent
         act1prob = agent1.act_prob(state1, is_eval=True)[0].tolist()
         act2prob = agent2.act_prob(state2, is_eval=True)[0].tolist()
-        actprob = [(rf * a1 + (1 - rf) * a2) for a1, a2 in zip(act1prob, act2prob)]
+        # Normalize act1prob
+        sum_act1prob = sum(act1prob)
+        normalized_act1prob = [a / sum_act1prob for a in act1prob]
+
+        # Normalize act2prob
+        sum_act2prob = sum(act2prob)
+        normalized_act2prob = [a / sum_act2prob for a in act2prob]
+
+        # Now you can calculate actprob with the normalized values
+        actprob = [(rf * a1 + (1 - rf) * a2) for a1, a2 in zip(normalized_act1prob, normalized_act2prob)]
+
+        print(normalized_act1prob)
+        print(normalized_act2prob)
+        print(actprob)
 
         if action1 != 1 and action1 != 2:
             action1 = "hold"
@@ -74,7 +87,8 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
 
 
         current_price = data[t]
-        action = np.argmax(actprob[0])
+        action = np.argmax(actprob)
+        print ("action : ", action)
 
         normalizer = 0
         for i in actprob:
@@ -102,8 +116,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
                 'amount': amount,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
                 'currency_rate': data[t],  # Dogru olmayabilir t zamandaki close price gondercez
-                'hft_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
-                'lft_inventory': 0  # hft gibi
+                'rm_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
             }
             response = requests.post(url, json=data2)
             print(response.text)  # Hata gelirse gorelim diye
@@ -129,8 +142,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
                 'amount': amount,  # Buraya data gelcek
                 'total_balance': 0,  # Global variable balance olcak onu gondercez
                 'currency_rate': data[t],  # Dogru olmayabilir t zamandaki close price gondercez
-                'hft_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
-                'lft_inventory': 0  # hft gibi
+                'rm_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
             }
             response = requests.post(url, json=data2)
             print(response.text)  # Hata gelirse gorelim diye
@@ -146,8 +158,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
                 'amount': 0,
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
                 'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
-                'hft_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
-                'lft_inventory': 0  # hft gibi
+                'rm_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
             }
             response = requests.post(url, json=data2)
             print(response.text)  # Hata gelirse gorelim diye
@@ -159,6 +170,20 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
         state1 = next_state1
         state2 = next_state2
         if done:
+            balance = balance + (data[data_length - 1] * rm_inventory)
+            data2 = {
+                'time': data_length - 1,
+                'normalized_max': 0,
+                'rm_request': 'hold',
+                'lft_agent_request': "hold",
+                'hft_agent_request': "hold",
+                'amount': rm_inventory,  # Buraya data gelcek
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'rm_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+            }
+            hft_inventory = 0
+            response = requests.post(url, json=data2)
             return total_profit, history
 
 def main():
@@ -175,7 +200,7 @@ def main():
     coloredlogs.install(level="DEBUG")
 
     short_term_model_name = "short_term_test_ep0_wd3_bs50"
-    long_term_model_name = "test_ep0_wd10_bs50"
+    long_term_model_name = "long_term_test_ep0_wd10_bs50"
 
     data = get_stock_data('./data/GOOG_2019.csv')
     initial_offset = data[1] - data[0]
