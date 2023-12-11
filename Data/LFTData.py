@@ -3,8 +3,8 @@ import ta
 import numpy as np
 
 # File paths
-input_file_path = 'DOGEUSDT-1m-2021-02.csv'  # Replace with your input file path
-output_file_path = 'LFTData.csv'  # Replace with your desired output file path
+input_file_path = 'DOGEUSDT-5m-2022-02.csv'  # Replace with your input file path
+output_file_path = 'LFTData02.csv'  # Replace with your desired output file path
 
 # Define the headers
 headers = [
