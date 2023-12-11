@@ -32,8 +32,8 @@ from short_term.utils import (
 def main(_agent_type, model_name, debug):
 
     #TODO: DELETE AFTER GETTING DATA
-    data = get_stock_data('./data/GOOG_2019.csv')
-    initial_offset = data[1] - data[0]
+    data = get_stock_data('./data/HFTData30min09.csv')
+    initial_offset = data[1][0] - data[0][0]
 
     # Single Model Evaluation
     if model_name is not None:

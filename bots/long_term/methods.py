@@ -5,11 +5,11 @@ import numpy as np
 
 from tqdm import tqdm
 
-from short_term.utils import (
+from bots.short_term.utils import (
     format_currency,
     format_position
 )
-from short_term.ops import (
+from bots.short_term.ops import (
     get_state
 )
 

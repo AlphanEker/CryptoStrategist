@@ -40,10 +40,10 @@ def main(_agent_type, _batch_size, _episode_count, _pretrained=False):
         sys.exit()
 
     #TODO: DELETE BELOW AFTER GETTING DATA ABOVE!
-    train_data = get_stock_data('./data/HFTData.csv')
-    val_data = get_stock_data('./data/HFTDataoffset.csv')
+    train_data = get_stock_data('./data/HFTData30min09_FULL.csv')
+    val_data = get_stock_data('./data/HFTData30min08_FULL.csv')
 
-    initial_offset = val_data[1] - val_data[0]
+    initial_offset = val_data[1][0] - val_data[0][0]
 
     for step in range(0, _episode_count + 1):
         # train the model
