@@ -84,17 +84,11 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
 
         current_price = data[t]
         action = np.argmax(actprob)
-        print ("action : ", action)
 
         normalizer = 0
         for i in actprob:
             normalizer = normalizer + i
         normalizedMax = np.max(actprob) / normalizer
-        print("normalized max: ", normalizedMax)
-
-        # TODO: Basic risk manager algorithm, change if needed!!!!
-
-
 
         # BUY
         if action == 1:
