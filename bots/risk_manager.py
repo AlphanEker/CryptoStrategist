@@ -6,7 +6,7 @@ Options:
   --risk-factor=<risk_factor>   Specify the risk factor in between 1-10 (1: lowest risk, 10: highest risk)
   -h --help                     Show this help message and exit.
 """
-
+import numpy as np
 from docopt import docopt
 import coloredlogs
 import logging
@@ -33,8 +33,11 @@ from short_term.ops import (
 def evaluate_agents(agent1, agent2, investment, risk_factor, data):
     total_profit = 0
     data_length = len(data) - 1
+    rf = risk_factor / 10
     history = []
     inventory = []
+    balance = investment
+    rm_inventory = 0
     state1 = get_state(data, 0, agent1.state_size + 1)
     state2 = get_state(data, 0, agent2.state_size + 1)
 
@@ -45,45 +48,42 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
         next_state2 = get_state(data, t + 1, agent2.state_size + 1)
 
         # select an action
-        action1 = agent1.act(state1, is_eval=True)
-        action2 = agent2.act(state2, is_eval=True)
+        action1 = agent1.act(state1, is_eval=True) # Short term agent
+        action2 = agent2.act(state2, is_eval=True) # Long term agent
+        act1prob = agent1.act_prob(state1, is_eval=True)[0].tolist()
+        act2prob = agent2.act_prob(state2, is_eval=True)[0].tolist()
+        actprob = [(rf * a1 + (1 - rf) * a2) for a1, a2 in zip(act1prob, act2prob)]
 
         if action1 != 1 and action1 != 2:
-            action1 = 0
+            action1 = "hold"
+
+        if action1 == 1:
+            action1 = "buy"
+
+        if action1 == 2:
+            action1 = "sell"
 
         if action2 != 1 and action2 != 2:
-            action2 = 0
+            action2 = "hold"
+
+        if action2 == 1:
+            action2 = "buy"
+
+        if action2 == 2:
+            action2 = "sell"
+
 
         current_price = data[t]
-        action = -1
+        action = np.argmax(actprob[0])
+
+        normalizer = 0
+        for i in actprob:
+            normalizer = normalizer + i
+        normalizedMax = np.max(actprob) / normalizer
+        print("normalized max: ", normalizedMax)
 
         # TODO: Basic risk manager algorithm, change if needed!!!!
-        if action1 == 0 and action2 == 0:
-            action = 0
-        elif action1 == 0 and action2 == 1:
-            if risk_factor > 5:
-                action = action1
-            else:
-                action = action2
-        elif action1 == 1 and action2 == 0:
-            if risk_factor > 5:
-                action = action1
-            else:
-                action = action2
-        elif action1 == 1 and action2 == 1:
-            action = 1
-        elif action1 == 1 and action2 == 2:
-            if risk_factor > 5:
-                action = action1
-            else:
-                action = action2
-        elif action1 == 2 and action2 == 1:
-            if risk_factor > 5:
-                action = action1
-            else:
-                action = action2
-        elif action1 == 2 and action2 == 2:
-            action = 2
+
 
 
         # BUY
@@ -91,18 +91,21 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
             inventory.append(data[t])
             history.append((data[t], "BUY"))
             logging.debug("RISK MANAGER BUY AT: {}".format(format_currency(data[t])))
-            data = {
+            amount = balance * normalizedMax / data[t]
+            balance = balance - amount * data[t]
+            rm_inventory = rm_inventory + amount
+            data2 = {
                 'time': t,
                 'rm_request': 'buy',
                 'lft_agent_request': action2,
                 'hft_agent_request': action1,
-                'amount': 100,  # Buraya data gelcek
-                'total_balance': 0,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
-                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'amount': amount,  # Buraya data gelcek
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
+                'currency_rate': data[t],  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data2)
             print(response.text)  # Hata gelirse gorelim diye
 
 
@@ -115,35 +118,38 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
             history.append((data[t], "SELL"))
             logging.debug("RISK MANAGER SELL AT: {} | Position: {}".format(
                     format_currency(data[t]), format_position(data[t] - bought_price)))
-            data = {
+            amount = rm_inventory * normalizedMax
+            balance = balance + amount * data[t]
+            rm_inventory = rm_inventory - amount
+            data2 = {
                 'time': t,
                 'rm_request': 'sell',
                 'lft_agent_request': action2,
                 'hft_agent_request': action1,
-                'amount': 100,  # Buraya data gelcek
+                'amount': amount,  # Buraya data gelcek
                 'total_balance': 0,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
-                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'currency_rate': data[t],  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data2)
             print(response.text)  # Hata gelirse gorelim diye
         # HOLD
         else:
             history.append((data[t], "HOLD"))
 
-            data = {
+            data2 = {
                 'time': t,
                 'rm_request': 'hold',
                 'lft_agent_request': action2,
                 'hft_agent_request': action1,
                 'amount': 0,
-                'total_balance': 0,  # Global variable balance olcak onu gondercez
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
                 'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
-                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'hft_inventory': rm_inventory,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data2)
             print(response.text)  # Hata gelirse gorelim diye
 
         done = (t == data_length - 1)
@@ -160,8 +166,8 @@ def main():
     investment = int(args["--investment"])
     risk_factor = int(args["--risk-factor"])
     url = "http://localhost:8111/set_initial_balance"
-    data = {'initial_balance': investment}  # Burasi csv file profit hesaplama icin gonderiliyor
-    response = requests.post(url, json=data)
+    data2 = {'initial_balance': investment}  # Burasi csv file profit hesaplama icin gonderiliyor
+    response = requests.post(url, json=data2)
     if risk_factor < 1 or risk_factor > 10:
         print("### Invalid risk factor, risk factor should be an int between 1 and 10!")
         sys.exit()
