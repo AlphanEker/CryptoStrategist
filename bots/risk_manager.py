@@ -191,7 +191,7 @@ def main():
     short_term_model_name = "short_term_test_ep0_wd3_bs50"
     long_term_model_name = "long_term_test_ep0_wd10_bs50"
 
-    data = get_stock_data('./data/GOOG_2019.csv')
+    data = get_stock_data('')
     initial_offset = data[1] - data[0]
 
     agent1 = ShortTermAgent(model_name=short_term_model_name, pretrained=True)

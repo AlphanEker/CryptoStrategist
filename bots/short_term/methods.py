@@ -7,15 +7,15 @@ import numpy as np
 
 from tqdm import tqdm
 
-from short_term.utils import (
+from bots.short_term.utils import (
     format_currency,
     format_position
 )
-from short_term.ops import (
+from bots.short_term.ops import (
     get_state
 )
 
-def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=10):
+def train_model(agent, episode, data, ep_count=100, batch_size=64, window_size=1):
     total_profit = 0
     data_length = len(data) - 1
 
@@ -33,12 +33,12 @@ def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=1
 
         # BUY
         if action == 1:
-            agent.inventory.append(data[t])
+            agent.inventory.append(data[t][0])
 
         # SELL
         elif action == 2 and len(agent.inventory) > 0:
             bought_price = agent.inventory.pop(0)
-            delta = data[t] - bought_price
+            delta = data[t][0] - bought_price
             reward = delta  # max(delta, 0)
             total_profit += delta
 
@@ -93,8 +93,8 @@ def evaluate_model(agent, data, window_size, debug=True):
 
         # BUY
         if action == 1:
-            agent.inventory.append(data[t])
-            history.append((data[t], "BUY"))
+             agent.inventory.append(data[t][0])
+            history.append((data[t][0], "BUY"))
             amount = balance * normalizedMax / data[t]
             balance = balance - (amount * data[t])
             hft_inventory = hft_inventory + amount
@@ -112,12 +112,12 @@ def evaluate_model(agent, data, window_size, debug=True):
             }
             response = requests.post(url, json=data2)
             if debug:
-                logging.debug("Buy at: {}".format(format_currency(data[t])))
+                logging.debug("Buy at: {}".format(format_currency(data[t][0])))
 
         # SELL
         elif action == 2 and len(agent.inventory) > 0:
             bought_price = agent.inventory.pop(0)
-            delta = data[t] - bought_price
+            delta = data[t][0] - bought_price
             reward = delta  # max(delta, 0)
             total_profit += delta
             amount = hft_inventory * normalizedMax * confidence
@@ -137,10 +137,10 @@ def evaluate_model(agent, data, window_size, debug=True):
             }
             response = requests.post(url, json=data2)
 
-            history.append((data[t], "SELL"))
+            history.append((data[t][0], "SELL"))
             if debug:
                 logging.debug("Sell at: {} | Position: {}".format(
-                    format_currency(data[t]), format_position(data[t] - bought_price)))
+                    format_currency(data[t][0]), format_position(data[t][0] - bought_price)))
         # HOLD
         else:
             data2 = {
@@ -156,7 +156,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'lft_inventory': 0  # hft gibi
             }
             response = requests.post(url, json=data2)
-            history.append((data[t], "HOLD"))
+            history.append((data[t][0], "HOLD"))
 
         done = (t == data_length - 1)
         agent.memory.append((state, action, reward, next_state, done))

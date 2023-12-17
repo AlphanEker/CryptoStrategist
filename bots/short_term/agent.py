@@ -27,11 +27,11 @@ class ShortTermAgent:
 
 
         # agent config
-        self.state_size = 3             # CONSTANT FOR SHORT TERM
+        self.state_size = 27             # CONSTANT FOR SHORT TERM
         self.action_size = 3            # [hold, buy, sell]
         self.model_name = model_name
         self.inventory = []
-        self.memory = deque(maxlen=10000) # replay buffer
+        self.memory = deque(maxlen=30000) # replay buffer
         self.first_iter = True
 
         # model configuration
@@ -59,8 +59,6 @@ class ShortTermAgent:
         model = Sequential()
         model.add(Dense(units=128, activation="relu", input_dim=self.state_size))
         model.add(Dense(units=256, activation="relu"))
-        model.add(Dense(units=256, activation="relu"))
-        model.add(Dense(units=128, activation="relu"))
         model.add(Dense(units=self.action_size))
 
         model.compile(loss=self.loss, optimizer=self.optimizer)
@@ -120,7 +118,6 @@ class ShortTermAgent:
                 print('Reward: ',reward)
                 # approximate deep q-learning equation
                 target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
-
                 # estimate q-values based on current state
                 q_values = self.model.predict(state)
                 # update the target for current action based on discounted reward
