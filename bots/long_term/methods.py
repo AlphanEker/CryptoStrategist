@@ -5,11 +5,11 @@ import numpy as np
 
 from tqdm import tqdm
 
-from bots.short_term.utils import (
+from bots.long_term.utils import (
     format_currency,
     format_position
 )
-from bots.short_term.ops import (
+from bots.long_term.ops import (
     get_state
 )
 
@@ -54,8 +54,7 @@ def train_model(agent, episode, data, ep_count=100, batch_size=32, window_size=1
 
         state = next_state
 
-    if episode % 10 == 0:
-        agent.save(episode, window_size, batch_size)
+    agent.save(episode, window_size, batch_size)
 
     return (episode, ep_count, total_profit, np.mean(np.array(avg_loss)))
 
@@ -141,6 +140,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                     format_currency(data[t][0]), format_position(data[t][0] - bought_price)))
         # HOLD
         else:
+            reward = - 0.0005
             data2 = {
                 'time': t,
                 'normalized_max': 0,

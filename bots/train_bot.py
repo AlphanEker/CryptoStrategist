@@ -14,11 +14,17 @@ from long_term.agent import LongTermAgent
 
 from short_term.methods import train_model, evaluate_model
 from short_term.utils import (
-    get_stock_data,
+    get_stock_data as short_get_stock_data,
     format_currency,
     format_position,
-    show_train_result,
-    switch_k_backend_device
+    show_train_result as short_show_train_result
+)
+
+from long_term.utils import (
+    get_stock_data as long_get_stock_data,
+    format_currency,
+    format_position,
+    show_train_result as long_show_train_result
 )
 from docopt import docopt
 
@@ -32,14 +38,14 @@ def main(_agent_type, _batch_size, _episode_count, _pretrained=False):
     if _agent_type == "short_term":
         # SET HIGH FREQUENCY DATA
         agent = ShortTermAgent(model_name, pretrained)
-        train_data = get_stock_data('./data/HFTData30min08.csv')
-        val_data = get_stock_data('./data/HFTData30min08.csv')
+        train_data = short_get_stock_data('./data/HFTData30min08.csv')
+        val_data = short_get_stock_data('./data/HFTData30min08.csv')
         print(f"### Short Term agent initialized for training with state size = {agent.state_size}.")
     elif _agent_type == "long_term":
         # SET LOW FREQUENCY DATA
         agent = LongTermAgent(model_name, pretrained)
-        train_data = get_stock_data('./data/LFTData30min08.csv')
-        val_data = get_stock_data('./data/LFTData30min08.csv')
+        train_data = long_get_stock_data('./data/LFTData02.csv')
+        val_data = long_get_stock_data('./data/LFTData02.csv')
         print(f"### Long Term agent initialized for training with state size = {agent.state_size}.")
     else:
         print("### Invalid agent type! Exiting...")
@@ -53,9 +59,11 @@ def main(_agent_type, _batch_size, _episode_count, _pretrained=False):
                                    window_size=agent.state_size)
         print(f"### Training completed for episode {step}.")
         # evaluate the model
-        validation_result, _ = evaluate_model(agent, val_data, agent.state_size)
+        #validation_result, _ = evaluate_model(agent, val_data, agent.state_size)
         print(f"### Evaluation completed for episode {step}.")
-        show_train_result(train_result, validation_result, initial_offset)
+        #short_show_train_result(train_result, validation_result, initial_offset)
+
+
 
 
 if __name__ == "__main__":

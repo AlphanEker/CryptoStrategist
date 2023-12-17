@@ -23,8 +23,7 @@ from short_term.utils import (
     get_stock_data,
     format_currency,
     format_position,
-    show_eval_result,
-    switch_k_backend_device
+    show_eval_result
 )
 
 
@@ -61,7 +60,6 @@ if __name__ == "__main__":
     debug = True
 
     coloredlogs.install(level="DEBUG")
-    switch_k_backend_device()
 
     try:
         main(agent_type, model_name, debug)

@@ -140,7 +140,7 @@ class LongTermAgent:
         return loss
 
     def save(self, episode, window_size, batch_size):
-        self.model.save("models/short_term_{}_ep{}_wd{}_bs{}".format(self.model_name, episode, window_size, batch_size))
+        self.model.save("models/long_term_{}_ep{}_wd{}_bs{}".format(self.model_name, episode, window_size, batch_size))
 
     def load(self):
         return load_model("models/" + self.model_name, custom_objects=self.custom_objects)

@@ -43,7 +43,7 @@ def get_stock_data(stock_file):
     selected_columns = ['close', 'high', 'low', 'volume', 'count', 'RSI', 'Stoch_%K', 'Stoch_%D', 'CCI', 'ADL', 'MFI',
                         'CMF', 'Bollinger_Mavg', 'Bollinger_Hband', 'Bollinger_Lband', 'Bollinger_Hband_Indicator',
                         'Bollinger_Lband_Indicator', 'ATR', 'MACD', 'MACD_Signal', 'MACD_Diff', 'Aroon_Up',
-                        'Aroon_Down', 'ADX', 'ADX_Pos', 'ADX_Neg', 'Cumulative_Return']
+                        'Aroon_Down', 'Ichimoku_A', 'Ichimoku_B', 'Ichimoku_Base_Line', 'Cumulative_Return']
 
     # Check if all selected columns are present in the DataFrame
     for col in selected_columns:
@@ -52,3 +52,4 @@ def get_stock_data(stock_file):
 
     # Return the data as a 2D array (numpy array)
     return df[selected_columns].values
+
