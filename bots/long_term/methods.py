@@ -93,8 +93,8 @@ def evaluate_model(agent, data, window_size, debug=True):
             agent.inventory.append(data[t][0])
 
             history.append((data[t][0], "BUY"))
-            amount = balance * normalizedMax * confidence / data[t]
-            balance = balance - (amount * data[t])
+            amount = balance * normalizedMax * confidence / data[t][0]
+            balance = balance - (amount * data[t][0])
             lft_inventory = lft_inventory + amount
             data2 = {
                 'time': t,
@@ -104,7 +104,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "buy",
                 'amount': amount,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),
                 'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': lft_inventory  # hft gibi
             }
@@ -119,7 +119,7 @@ def evaluate_model(agent, data, window_size, debug=True):
             reward = delta  # max(delta, 0)
             total_profit += delta
             amount = lft_inventory * normalizedMax * confidence
-            balance = balance + (amount * data[t])
+            balance = balance + (amount * data[t][0])
             lft_inventory = lft_inventory - amount
             data2 = {
                 'time': t,
@@ -129,7 +129,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "sell",
                 'amount': amount,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),
                 'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': lft_inventory  # hft gibi
             }
@@ -149,7 +149,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "hold",
                 'amount': 0,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),  # Dogru olmayabilir t zamandaki close price gondercez
                 'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': lft_inventory  # hft gibi
             }
@@ -161,7 +161,7 @@ def evaluate_model(agent, data, window_size, debug=True):
 
         state = next_state
         if done:
-            balance = balance + (data[data_length - 1] * lft_inventory)
+            balance = balance + (data[data_length - 1][0] * lft_inventory) #Sell all inventory
             data2 = {
                 'time': data_length - 1,
                 'normalized_max': 0,
@@ -170,7 +170,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "hold",
                 'amount': lft_inventory,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),  # Dogru olmayabilir t zamandaki close price gondercez
                 'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }

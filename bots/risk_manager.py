@@ -82,7 +82,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
             action2 = "sell"
 
 
-        current_price = data[t]
+        current_price = data[t][0]
         action = np.argmax(actprob)
 
         normalizer = 0
@@ -92,11 +92,11 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
 
         # BUY
         if action == 1:
-            inventory.append(data[t])
-            history.append((data[t], "BUY"))
-            logging.debug("RISK MANAGER BUY AT: {}".format(format_currency(data[t])))
-            amount = balance * normalizedMax / data[t]
-            balance = balance - amount * data[t]
+            inventory.append(data[t][0])
+            history.append((data[t][0], "BUY"))
+            logging.debug("RISK MANAGER BUY AT: {}".format(format_currency(data[t][0])))
+            amount = balance * normalizedMax / data[t][0]
+            balance = balance - amount * data[t][0]
             rm_inventory = rm_inventory + amount
             data2 = {
                 'time': t,
@@ -105,7 +105,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
                 'hft_agent_request': action1,
                 'amount': amount,
                 'total_balance': balance,
-                'currency_rate': data[t],
+                'currency_rate': data[t][0],
                 'rm_inventory': rm_inventory,
             }
             response = requests.post(url, json=data2)
@@ -118,11 +118,11 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
             delta = data[t] - bought_price
             reward = delta  # max(delta, 0)
             total_profit += delta
-            history.append((data[t], "SELL"))
+            history.append((data[t][0], "SELL"))
             logging.debug("RISK MANAGER SELL AT: {} | Position: {}".format(
-                    format_currency(data[t]), format_position(data[t] - bought_price)))
+                    format_currency(data[t][0]), format_position(data[t][0] - bought_price)))
             amount = rm_inventory * normalizedMax
-            balance = balance + amount * data[t]
+            balance = balance + amount * data[t][0]
             rm_inventory = rm_inventory - amount
             data2 = {
                 'time': t,
@@ -131,14 +131,14 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
                 'hft_agent_request': action1,
                 'amount': amount,
                 'total_balance': balance,
-                'currency_rate': data[t],
+                'currency_rate': data[t][0],
                 'rm_inventory': rm_inventory,
             }
             response = requests.post(url, json=data2)
             print(response.text)  # Hata gelirse gorelim diye
         # HOLD
         else:
-            history.append((data[t], "HOLD"))
+            history.append((data[t][0], "HOLD"))
 
             data2 = {
                 'time': t,
@@ -147,7 +147,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
                 'hft_agent_request': action1,
                 'amount': 0,
                 'total_balance': balance,
-                'currency_rate': data[t],
+                'currency_rate': data[t][0],
                 'rm_inventory': rm_inventory,
             }
             response = requests.post(url, json=data2)
@@ -160,7 +160,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
         state1 = next_state1
         state2 = next_state2
         if done:
-            balance = balance + (data[data_length - 1] * rm_inventory)
+            balance = balance + (data[data_length - 1][0] * rm_inventory) #sell all inventory
             data2 = {
                 'time': data_length,
                 'normalized_max': 0,
@@ -169,7 +169,7 @@ def evaluate_agents(agent1, agent2, investment, risk_factor, data):
                 'hft_agent_request': "hold",
                 'amount': rm_inventory,
                 'total_balance': balance,
-                'currency_rate': format_currency(data[t]),
+                'currency_rate': format_currency(data[t][0]),
                 'rm_inventory': 0,
             }
             response = requests.post(url, json=data2)
@@ -192,7 +192,7 @@ def main():
     long_term_model_name = "long_term_test_ep0_wd10_bs50"
 
     data = get_stock_data('')
-    initial_offset = data[1] - data[0]
+    initial_offset = data[1][0] - data[0][0]
 
     agent1 = ShortTermAgent(model_name=short_term_model_name, pretrained=True)
     print(f"### Short Term agent initialized for evaluation with state size = {agent1.state_size}.")

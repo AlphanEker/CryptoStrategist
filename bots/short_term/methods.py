@@ -93,10 +93,10 @@ def evaluate_model(agent, data, window_size, debug=True):
 
         # BUY
         if action == 1:
-             agent.inventory.append(data[t][0])
+            agent.inventory.append(data[t][0])
             history.append((data[t][0], "BUY"))
-            amount = balance * normalizedMax / data[t]
-            balance = balance - (amount * data[t])
+            amount = balance * normalizedMax / data[t][0]
+            balance = balance - (amount * data[t][0])
             hft_inventory = hft_inventory + amount
             data2 = {
                 'time': t,
@@ -106,7 +106,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "buy",
                 'amount': amount,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),  # Dogru olmayabilir t zamandaki close price gondercez
                 'hft_inventory': hft_inventory,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }
@@ -120,8 +120,8 @@ def evaluate_model(agent, data, window_size, debug=True):
             delta = data[t][0] - bought_price
             reward = delta  # max(delta, 0)
             total_profit += delta
-            amount = hft_inventory * normalizedMax * confidence
-            balance = balance + (amount * data[t])
+            amount = hft_inventory * normalizedMax
+            balance = balance + (amount * data[t][0])
             hft_inventory = hft_inventory - amount
             data2 = {
                 'time': t,
@@ -131,7 +131,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "sell",
                 'amount': amount,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),  # Dogru olmayabilir t zamandaki close price gondercez
                 'hft_inventory': hft_inventory,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }
@@ -151,7 +151,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "hold",
                 'amount': 0,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),  # Dogru olmayabilir t zamandaki close price gondercez
                 'hft_inventory': hft_inventory,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }
@@ -163,7 +163,7 @@ def evaluate_model(agent, data, window_size, debug=True):
 
         state = next_state
         if done:
-            balance = balance + (data[data_length - 1] * hft_inventory)
+            balance = balance + (data[data_length - 1][0] * hft_inventory)
             data2 = {
                 'time': data_length - 1,
                 'normalized_max': 0,
@@ -172,7 +172,7 @@ def evaluate_model(agent, data, window_size, debug=True):
                 'hft_agent_request': "hold",
                 'amount': hft_inventory,  # Buraya data gelcek
                 'total_balance': balance,  # Global variable balance olcak onu gondercez
-                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'currency_rate': format_currency(data[t][0]),  # Dogru olmayabilir t zamandaki close price gondercez
                 'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
                 'lft_inventory': 0  # hft gibi
             }
