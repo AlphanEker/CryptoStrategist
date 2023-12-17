@@ -22,32 +22,35 @@ from short_term.utils import (
 )
 from docopt import docopt
 
+
 def main(_agent_type, _batch_size, _episode_count, _pretrained=False):
     model_name = 'test'
     print(f"### Training agent {model_name} with the arguments:", _agent_type, _batch_size, _episode_count, _pretrained)
-
+    train_data = None
+    val_data = None
     agent = None
     if _agent_type == "short_term":
-        #TODO: GET HIGH FREQUENCY DATA HERE!
+        # SET HIGH FREQUENCY DATA
         agent = ShortTermAgent(model_name, pretrained)
+        train_data = get_stock_data('./data/HFTData30min08.csv')
+        val_data = get_stock_data('./data/HFTData30min08.csv')
         print(f"### Short Term agent initialized for training with state size = {agent.state_size}.")
     elif _agent_type == "long_term":
-        #TODO: GET LOW FREQUENCY DATA HERE!
+        # SET LOW FREQUENCY DATA
         agent = LongTermAgent(model_name, pretrained)
+        train_data = get_stock_data('./data/LFTData30min08.csv')
+        val_data = get_stock_data('./data/LFTData30min08.csv')
         print(f"### Long Term agent initialized for training with state size = {agent.state_size}.")
     else:
         print("### Invalid agent type! Exiting...")
         sys.exit()
 
-    #TODO: DELETE BELOW AFTER GETTING DATA ABOVE!
-    train_data = get_stock_data('./data/HFTData30min09_FULL.csv')
-    val_data = get_stock_data('./data/HFTData30min08_FULL.csv')
-
     initial_offset = val_data[1][0] - val_data[0][0]
 
     for step in range(0, _episode_count + 1):
         # train the model
-        train_result = train_model(agent, step, train_data, ep_count=_episode_count, batch_size=_batch_size, window_size=agent.state_size)
+        train_result = train_model(agent, step, train_data, ep_count=_episode_count, batch_size=_batch_size,
+                                   window_size=agent.state_size)
         print(f"### Training completed for episode {step}.")
         # evaluate the model
         validation_result, _ = evaluate_model(agent, val_data, agent.state_size)
