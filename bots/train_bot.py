@@ -1,6 +1,5 @@
 """Usage:
-  train_bot.py [--agent-type=<agent_type>] [--window-size=<window-size>]
-  [--batch-size=<batch-size>] [--episode-count=<episode-count>]
+  train_bot.py [--agent-type=<agent_type>] [--batch-size=<batch-size>] [--episode-count=<episode-count>]
   [--pretrained]
 
 Options:
@@ -8,7 +7,11 @@ Options:
   -h --help               Show this help message and exit.
 """
 
-from short_term.agent import Agent
+import sys
+
+from short_term.agent import ShortTermAgent
+from long_term.agent import LongTermAgent
+
 from short_term.methods import train_model, evaluate_model
 from short_term.utils import (
     get_stock_data,
@@ -19,22 +22,38 @@ from short_term.utils import (
 )
 from docopt import docopt
 
-def main(_agent_type, _window_size, _batch_size, _episode_count, _pretrained=False):
+
+def main(_agent_type, _batch_size, _episode_count, _pretrained=False):
     model_name = 'test'
-    print(f"### Training agent {model_name} with the arguments:", _agent_type, _window_size, _batch_size, _episode_count, _pretrained)
-    agent = Agent(_window_size, model_name, pretrained)
+    print(f"### Training agent {model_name} with the arguments:", _agent_type, _batch_size, _episode_count, _pretrained)
+    train_data = None
+    val_data = None
+    agent = None
+    if _agent_type == "short_term":
+        # SET HIGH FREQUENCY DATA
+        agent = ShortTermAgent(model_name, pretrained)
+        train_data = get_stock_data('./data/HFTData30min08.csv')
+        val_data = get_stock_data('./data/HFTData30min08.csv')
+        print(f"### Short Term agent initialized for training with state size = {agent.state_size}.")
+    elif _agent_type == "long_term":
+        # SET LOW FREQUENCY DATA
+        agent = LongTermAgent(model_name, pretrained)
+        train_data = get_stock_data('./data/LFTData30min08.csv')
+        val_data = get_stock_data('./data/LFTData30min08.csv')
+        print(f"### Long Term agent initialized for training with state size = {agent.state_size}.")
+    else:
+        print("### Invalid agent type! Exiting...")
+        sys.exit()
 
-    train_data = get_stock_data('./data/GOOG_2019.csv')
-    val_data = get_stock_data('./data/GOOG_2019.csv')
-
-    initial_offset = val_data[1] - val_data[0]
+    initial_offset = val_data[1][0] - val_data[0][0]
 
     for step in range(0, _episode_count + 1):
         # train the model
-        train_result = train_model(agent, step, train_data, ep_count=_episode_count, batch_size=_batch_size, window_size=_window_size)
+        train_result = train_model(agent, step, train_data, ep_count=_episode_count, batch_size=_batch_size,
+                                   window_size=agent.state_size)
         print(f"### Training completed for episode {step}.")
         # evaluate the model
-        validation_result, _ = evaluate_model(agent, val_data, window_size)
+        validation_result, _ = evaluate_model(agent, val_data, agent.state_size)
         print(f"### Evaluation completed for episode {step}.")
         show_train_result(train_result, validation_result, initial_offset)
 
@@ -43,12 +62,11 @@ if __name__ == "__main__":
     args = docopt(__doc__)
 
     agent_type = args["--agent-type"]
-    window_size = int(args["--window-size"])
     batch_size = int(args["--batch-size"])
     episode_count = int(args["--episode-count"])
     pretrained = args["--pretrained"]
 
     try:
-        main(agent_type, window_size, batch_size, episode_count, pretrained)
+        main(agent_type, batch_size, episode_count, pretrained)
     except KeyboardInterrupt:
         print("### Keyboard Interrupt: Exiting.")

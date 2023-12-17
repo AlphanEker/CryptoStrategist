@@ -22,17 +22,16 @@ def huber_loss(actual, predicted, delta=1.0):
     # Return the result as a tensor
     return K.mean(tf.where(cond, squared_loss, quadratic_loss))
 
-class Agent:
-    def __init__(self, state_size, model_name, pretrained):
+class ShortTermAgent:
+    def __init__(self, model_name, pretrained):
 
-        tf.get_logger().setLevel(tf.compat.v1.logging.ERROR)
 
         # agent config
-        self.state_size = state_size    # number of days scaled
+        self.state_size = 27             # CONSTANT FOR SHORT TERM
         self.action_size = 3            # [hold, buy, sell]
         self.model_name = model_name
         self.inventory = []
-        self.memory = deque(maxlen=10000) # replay buffer
+        self.memory = deque(maxlen=30000) # replay buffer
         self.first_iter = True
 
         # model configuration
@@ -60,8 +59,6 @@ class Agent:
         model = Sequential()
         model.add(Dense(units=128, activation="relu", input_dim=self.state_size))
         model.add(Dense(units=256, activation="relu"))
-        model.add(Dense(units=256, activation="relu"))
-        model.add(Dense(units=128, activation="relu"))
         model.add(Dense(units=self.action_size))
 
         model.compile(loss=self.loss, optimizer=self.optimizer)
@@ -102,9 +99,9 @@ class Agent:
             if done:
                 target = reward
             else:
+                print("reward : ", reward)
                 # approximate deep q-learning equation
                 target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
-
                 # estimate q-values based on current state
                 q_values = self.model.predict(state)
                 # update the target for current action based on discounted reward
@@ -127,7 +124,7 @@ class Agent:
         return loss
 
     def save(self, episode, window_size, batch_size):
-        self.model.save("models/{}_ep{}_wd{}_bs{}".format(self.model_name, episode, window_size, batch_size))
+        self.model.save("models/short_term_{}_ep{}_wd{}_bs{}".format(self.model_name, episode, window_size, batch_size))
 
     def load(self):
         return load_model("models/" + self.model_name, custom_objects=self.custom_objects)
