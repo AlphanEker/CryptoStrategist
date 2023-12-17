@@ -2,11 +2,11 @@
 * train_bot.py: Driver code to start training of the agent with the provided parameters.
 Saves the trained model in /models directory in the format <model_name>_ep<episode_count>\_wd<window_size>_bs<batch_size>
   * Example Usage:
-```python .\train_bot.py --agent-type short-term --window-size 10 --batch-size 50 --episode-count 0```
+```python .\train_bot.py --agent-type short_term --batch-size 50 --episode-count 0```
   * Data: train_data, val_data variables inside main function.
 * eval_bot.py: Driver code to evaluate the trained model with the provided parameters.
   * Example Usage:
-```python .\eval_bot.py ./data/GOOG_2019.csv --window-size 10 --model-name test_ep0_wd10_bs50```
+```python --agent-type short_term --model-name short_term_9k_train_ep0_wd27_bs16```
 
 ## Agent & Models
 * agent.py:
@@ -48,3 +48,15 @@ Saves the trained model in /models directory in the format <model_name>_ep<episo
   * sigmoid: Sigmoid function
   * get_state: Gets a sample of window-size units (days in this case)
 * utils.py: Utility functions
+
+## Starting Training
+### Before Starting Trading
+User first needs to generate the necessary indicators that should be plugged into the training. For this purpose we have two scripts:
+* Data/HFTData.py
+* Data/LFTData.py
+
+For the desired agent, user should run the script and plug the stock market .csv file into the script.
+The output then can be used directly in the 'bots/train_bot.py'.
+
+## Starting Trading Environment
+For training environment user just has to run 'bots/actionLog.py'. It starts a Flask server that will log the agent activities.
