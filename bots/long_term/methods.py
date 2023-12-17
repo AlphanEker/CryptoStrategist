@@ -1,6 +1,6 @@
 import os
 import logging
-
+import requests
 import numpy as np
 
 from tqdm import tqdm
@@ -64,10 +64,15 @@ def evaluate_model(agent, data, window_size, debug=True):
     debug=True
     total_profit = 0
     data_length = len(data) - 1
-
+    balance = 10000
+    confidence = 0.5
+    lft_inventory = 0
     history = []
     agent.inventory = []
-
+    url = "http://localhost:8111/set_initial_balance"
+    data2 = {'initial_balance': balance}  # Burasi csv file profit hesaplama icin gonderiliyor
+    response = requests.post(url, json=data2)
+    url = "http://localhost:8111/log_action"
     state = get_state(data, 0, window_size + 1)
 
     for t in range(data_length):
@@ -76,12 +81,34 @@ def evaluate_model(agent, data, window_size, debug=True):
 
         # select an action
         action = agent.act(state, is_eval=True)
+        action_probs = agent.act_prob(state, is_eval=True)[0].tolist()
+        normalizer = 0
+        for i in action_probs:
+            normalizer = normalizer + i
+        normalizedMax = np.max(action_probs) / normalizer
+        print("normalized max: ", normalizedMax)
 
         # BUY
         if action == 1:
             agent.inventory.append(data[t][0])
 
             history.append((data[t][0], "BUY"))
+            amount = balance * normalizedMax * confidence / data[t]
+            balance = balance - (amount * data[t])
+            lft_inventory = lft_inventory + amount
+            data2 = {
+                'time': t,
+                'normalized_max': normalizedMax,
+                'rm_request': 'buy',
+                'lft_agent_request': "buy",
+                'hft_agent_request': "buy",
+                'amount': amount,  # Buraya data gelcek
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': lft_inventory  # hft gibi
+            }
+            response = requests.post(url, json=data2)
             if debug:
                 logging.debug("Buy at: {}".format(format_currency(data[t][0])))
 
@@ -91,6 +118,22 @@ def evaluate_model(agent, data, window_size, debug=True):
             delta = data[t][0] - bought_price
             reward = delta  # max(delta, 0)
             total_profit += delta
+            amount = lft_inventory * normalizedMax * confidence
+            balance = balance + (amount * data[t])
+            lft_inventory = lft_inventory - amount
+            data2 = {
+                'time': t,
+                'normalized_max': normalizedMax,
+                'rm_request': 'sell',
+                'lft_agent_request': "sell",
+                'hft_agent_request': "sell",
+                'amount': amount,  # Buraya data gelcek
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': lft_inventory  # hft gibi
+            }
+            response = requests.post(url, json=data2)
 
             history.append((data[t][0], "SELL"))
             if debug:
@@ -98,6 +141,19 @@ def evaluate_model(agent, data, window_size, debug=True):
                     format_currency(data[t][0]), format_position(data[t][0] - bought_price)))
         # HOLD
         else:
+            data2 = {
+                'time': t,
+                'normalized_max': 0,
+                'rm_request': 'hold',
+                'lft_agent_request': "hold",
+                'hft_agent_request': "hold",
+                'amount': 0,  # Buraya data gelcek
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': lft_inventory  # hft gibi
+            }
+            response = requests.post(url, json=data2)
             history.append((data[t][0], "HOLD"))
 
         done = (t == data_length - 1)
@@ -105,4 +161,19 @@ def evaluate_model(agent, data, window_size, debug=True):
 
         state = next_state
         if done:
+            balance = balance + (data[data_length - 1] * lft_inventory)
+            data2 = {
+                'time': data_length - 1,
+                'normalized_max': 0,
+                'rm_request': 'hold',
+                'lft_agent_request': "hold",
+                'hft_agent_request': "hold",
+                'amount': lft_inventory,  # Buraya data gelcek
+                'total_balance': balance,  # Global variable balance olcak onu gondercez
+                'currency_rate': format_currency(data[t]),  # Dogru olmayabilir t zamandaki close price gondercez
+                'hft_inventory': 0,  # buraya hft ne kadar coine sahip o gelcek
+                'lft_inventory': 0  # hft gibi
+            }
+            lft_inventory = 0
+            response = requests.post(url, json=data2)
             return total_profit, history

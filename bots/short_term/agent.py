@@ -86,6 +86,22 @@ class ShortTermAgent:
         action_probs = self.model.predict(state)
         return np.argmax(action_probs[0])
 
+    def act_prob(self, state, is_eval=False):
+        """
+        Take action from given possible set of actions
+        """
+        # take random action in order to diversify experience at the beginning
+        if not is_eval and random.random() <= self.epsilon:
+            return random.randrange(self.action_size)
+
+        if self.first_iter:
+            self.first_iter = False
+            return 1 # make a definite buy on the first iter
+
+        # Take the maximum probability action given state
+        action_probs = self.model.predict(state)
+        return action_probs
+
     def train_experience_replay(self, batch_size):
         """
         Train on previous experiences in memory
@@ -99,7 +115,7 @@ class ShortTermAgent:
             if done:
                 target = reward
             else:
-                print("reward : ", reward)
+                print('Reward: ',reward)
                 # approximate deep q-learning equation
                 target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
                 # estimate q-values based on current state
